@@ -14,6 +14,13 @@ internal class FoodRepositoryImpl : FoodRepository, KoinComponent {
 
     private val foodApi: FoodApi by inject()
 
+    /**
+     * Performs network call on [Dispatchers.Default]
+     * Flow emits values based on current process
+     * On initial call state is loading
+     * if response is success we emit the value
+     * If the response is empty or there is an exception we emit an error message
+     */
     override suspend fun getDetailsForFoodItem(term: String): Flow<DataState<List<FoodDetails>>> =
         flow {
             emit(DataState<List<FoodDetails>>(loading = true))
@@ -28,8 +35,7 @@ internal class FoodRepositoryImpl : FoodRepository, KoinComponent {
                 }
             } catch (ex: Exception) {
                 println(ex.toString())
-//                DataState<List<FoodDetails>>(exception = "Unable to get details for item.")
-                DataState<List<FoodDetails>>(exception = ex.toString())
+                DataState<List<FoodDetails>>(exception = "Unable to get details for item.")
             }
             emit(resource)
         }.flowOn(Dispatchers.Default)

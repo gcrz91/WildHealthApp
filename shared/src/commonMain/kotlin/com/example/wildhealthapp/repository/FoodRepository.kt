@@ -6,6 +6,9 @@ import kotlinx.coroutines.flow.Flow
 
 interface FoodRepository {
 
+    /**
+     * Makes Network request to get details of food items based on user query
+     */
     suspend fun getDetailsForFoodItem(term: String) : Flow<DataState<List<FoodDetails>>>
 
 }

@@ -17,20 +17,32 @@ class FoodViewModel : ViewModel(), KoinComponent {
 
     private val repository: FoodRepository by inject()
 
+    /**
+     * Tracks the state of our responses returned by [FoodRepository.getDetailsForFoodItem]
+     */
     private val _foodStateFlow: MutableStateFlow<DataState<List<FoodDetails>>> = MutableStateFlow(
         DataState()
     )
     val foodStateFlow: StateFlow<DataState<List<FoodDetails>>> = _foodStateFlow
 
+    /**
+     * Tracks user input from Screen.SearchScreen.route
+     */
     private var _keyword: MutableStateFlow<String> = MutableStateFlow("")
     val keyword: StateFlow<String> = _keyword
 
     var selectedFoodItem: FoodDetails? = null
 
+    /**
+     * If user has no input we display an error message
+     * When we call repo we update state to loading.
+     * and when we receive the result we pass the result as the new value of [FoodViewModel.foodStateFlow]
+     */
     @OptIn(FlowPreview::class)
     fun getFoodDetailsForKeyword() {
         if (keyword.value.isBlank()) {
-            _foodStateFlow.value = _foodStateFlow.value.copy(exception = "Please Enter a valid input.")
+            _foodStateFlow.value =
+                _foodStateFlow.value.copy(exception = "Please Enter a valid input.")
         }
         viewModelScope.launch {
             repository.getDetailsForFoodItem(keyword.value).collect { dataState ->
