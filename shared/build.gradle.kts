@@ -1,9 +1,12 @@
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 
 plugins {
     kotlin("multiplatform")
     kotlin("native.cocoapods")
     id("com.android.library")
+    id("com.codingfeline.buildkonfig")
+    id("kotlinx-serialization")
 }
 
 version = "1.0"
@@ -27,18 +30,42 @@ kotlin {
     }
     
     sourceSets {
-        val commonMain by getting
-        val commonTest by getting {
-            dependencies {
-                implementation(kotlin("test-common"))
-                implementation(kotlin("test-annotations-common"))
+        all {
+            languageSettings.apply {
+                optIn("kotlin.RequiresOptIn")
+                optIn("kotlinx.coroutines.ExperimentalCoroutinesApi")
             }
         }
-        val androidMain by getting
+
+        val commonMain by getting {
+            dependencies {
+                with(libs) {
+                    implementation(koin.core)
+                    implementation(coroutines.core)
+                    implementation(bundles.ktor.common)
+                }
+            }
+        }
+        val commonTest by getting {
+            dependencies {
+                with(libs) {
+                    implementation(bundles.shared.commonTest)
+                }
+            }
+        }
+        val androidMain by getting {
+            dependencies {
+                with(libs) {
+                    implementation(ktor.client.okHttp)
+                }
+            }
+        }
+
         val androidTest by getting {
             dependencies {
-                implementation(kotlin("test-junit"))
-                implementation("junit:junit:4.13.2")
+                with(libs) {
+                    implementation(libs.bundles.shared.androidTest)
+                }
             }
         }
         val iosMain by getting
@@ -47,10 +74,19 @@ kotlin {
 }
 
 android {
-    compileSdkVersion(31)
+    compileSdk = libs.versions.compileSdk.get().toInt()
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
     defaultConfig {
-        minSdkVersion(23)
-        targetSdkVersion(31)
+        minSdk = libs.versions.mindSdk.get().toInt()
+        targetSdk = libs.versions.targetSdk.get().toInt()
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+}
+
+buildkonfig {
+    packageName = "com.example.wildhealthapp"
+    exposeObjectWithName = "BuildKonfig"
+    defaultConfigs {
+        buildConfigField(STRING, "apiKey", "Add Api Key")
     }
 }
